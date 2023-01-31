@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:root/root.dart';
-import './dashboard.dart';
+import './web_view.dart';
 
 void main() =>
     runApp(const MaterialApp(debugShowCheckedModeBanner: false, home: MyApp()));
@@ -15,12 +15,12 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  bool _runingStatus = false;
+  bool _runningStatus = false;
   String _btnStart = 'START';
-  String _result = " ";
+  String? _result;
   bool _status = false;
-  bool _statusAvailability = false;
-  String _logs = "Kosong";
+  String? _logs;
+
   Future<void> noRootAccess() async {
     return showDialog<void>(
       context: context,
@@ -55,14 +55,6 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  //Check Root availability
-  Future<void> checkRootAvailability() async {
-    bool? result = await Root.isRootAvailable();
-    setState(() {
-      _statusAvailability = result!;
-    });
-  }
-
   //Execute shell Commands
   Future<void> startService() async {
     String? res;
@@ -70,7 +62,7 @@ class _MyAppState extends State<MyApp> {
     setState(() {
       _result = res!;
     });
-    if (_result.contains('disable')) {
+    if (_result!.contains('disable')) {
       res = await Root.exec(
           cmd: "rm -f /data/adb/modules/box_for_magisk/disable");
       setState(() {
@@ -83,28 +75,29 @@ class _MyAppState extends State<MyApp> {
         _result = res!;
       });
     }
-    isRuning();
+    isRunning();
   }
 
-  Future<void> isRuning() async {
+  Future<void> isRunning() async {
     String? res;
     res = await Root.exec(cmd: "ls /data/adb/modules/box_for_magisk");
     setState(() {
       _result = res!;
     });
-    if (_result.contains('disable')) {
+    if (_result!.contains('disable')) {
       setState(() {
-        _runingStatus = false;
+        _runningStatus = false;
         _btnStart = 'START';
       });
     } else {
       setState(() {
-        _runingStatus = true;
+        _runningStatus = true;
         _btnStart = 'STOP';
       });
     }
   }
-  Future<void> Logs() async {
+
+  Future<void> logs() async {
     String? log;
     log = await Root.exec(cmd: "cat /data/adb/box/run/runs.log");
     setState(() {
@@ -116,10 +109,9 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     checkRoot();
-    checkRootAvailability();
-    isRuning();
-    Timer mytimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
-      Logs();
+    isRunning();
+    Timer.periodic(const Duration(seconds: 1), (timer) {
+      logs();
     });
   }
 
@@ -138,30 +130,32 @@ class _MyAppState extends State<MyApp> {
               ],
             ),
             Row(children: [
-              Text('Status Service : $_runingStatus'),
+              Text('Status Service : $_runningStatus'),
             ]),
             Row(
               children: [
-                OutlinedButton(
-                    onPressed: startService,
-                    child: SizedBox(
-                      width: width / 2,
-                      child: Center(
-                          child: Text(
+                SizedBox(
+                    width: width / 2 - 32,
+                    child: OutlinedButton.icon(
+                      onPressed: startService,
+                      icon: const Icon(Icons.play_arrow,
+                          size: 25, color: Colors.black),
+                      label: Text(
                         _btnStart,
                         style: const TextStyle(
                             fontSize: 20,
                             fontStyle: FontStyle.italic,
                             color: Colors.black54),
-                      )),
+                      ),
                     )),
-                const Spacer(),
+                Spacer(),
                 OutlinedButton.icon(
                     onPressed: () {
                       Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => const MyDashboard()));
+                              builder: (context) => const MyDashboard(
+                                  'http://127.0.0.1:9090/ui','DASHBOARD')));
                     },
                     icon: const Icon(Icons.desktop_mac,
                         size: 20, color: Colors.black),
@@ -176,23 +170,44 @@ class _MyAppState extends State<MyApp> {
             ),
             Row(
               children: [
+                SizedBox(
+                    width: width / 2 - 32,
+                    child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const MyDashboard(
+                                      'https://speedtest.net','SPEEDTEST')));
+                        },
+                        icon: const Icon(Icons.speed_outlined,
+                            size: 20, color: Colors.black),
+                        label: const Text(
+                          'SPEEDTEST',
+                          style: TextStyle(
+                              fontSize: 20,
+                              fontStyle: FontStyle.italic,
+                              color: Colors.black54),
+                        ))),
+              ],
+            ),
+            Row(
+              children: [
                 Container(
                   // color: Colors.black,
-                  height: 600,
+                  height: MediaQuery.of(context).size.height / 2,
                   decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Color.fromARGB(255, 0, 0, 0),
-                    ),
-                    borderRadius: const BorderRadius.all(Radius.circular(20)),
-                    color: Color.fromARGB(255, 32, 32, 32)
-                  ),
+                      border: Border.all(
+                        color: const Color.fromARGB(255, 0, 0, 0),
+                      ),
+                      borderRadius: const BorderRadius.all(Radius.circular(20)),
+                      color: const Color.fromARGB(255, 32, 32, 32)),
                   width: MediaQuery.of(context).size.width - 32,
                   child: Center(
-                    child: ListView(
-                      padding: EdgeInsets.all(10),
-                      children: [
+                    child:
+                        ListView(padding: const EdgeInsets.all(10), children: [
                       Text(
-                        _logs,
+                        _logs!,
                         style: const TextStyle(color: Colors.white),
                       )
                     ]),
