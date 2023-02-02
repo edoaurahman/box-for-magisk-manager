@@ -38,6 +38,7 @@ dependencies:
   cupertino_icons: ^1.0.2
   root: ^2.0.4
   webview_flutter: ^4.0.2
+  process_run: ^0.12.5+2
 
 dev_dependencies:
   flutter_test:
