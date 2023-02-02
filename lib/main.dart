@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:async';
+import 'package:box_for_magisk/src/decoder.dart';
 import 'package:flutter/material.dart';
 import 'package:root/root.dart';
 import './web_view.dart';
@@ -125,6 +126,13 @@ class _MyAppState extends State<MyApp> {
   }
 
   @override
+  void setState(fn) {
+    if (mounted) {
+      super.setState(fn);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     var width = MediaQuery.of(context).size.width;
     return Scaffold(
@@ -151,6 +159,8 @@ class _MyAppState extends State<MyApp> {
             Row(children: [
               Text('Status Service : $_runningStatus'),
             ]),
+
+            //Button
             Row(
               children: [
                 SizedBox(
@@ -231,6 +241,50 @@ class _MyAppState extends State<MyApp> {
             ),
             Row(
               children: [
+                SizedBox(
+                    width: width / 2 - 32,
+                    child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const WebView(
+                                      'https://howdy.id', 'CREATE ACCOUNT')));
+                        },
+                        icon: const Icon(Icons.person_add_alt,
+                            size: 20, color: Colors.black),
+                        label: const Text(
+                          'CREATE ACCOUNT',
+                          style: TextStyle(
+                              fontSize: 20,
+                              fontStyle: FontStyle.italic,
+                              color: Colors.black54),
+                        ))),
+                const Spacer(),
+                SizedBox(
+                    width: width / 2 - 32,
+                    child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const Convert()));
+                        },
+                        icon: const Icon(Icons.change_circle_outlined,
+                            size: 20, color: Colors.black),
+                        label: const Text(
+                          'CONVERTER',
+                          style: TextStyle(
+                              fontSize: 20,
+                              fontStyle: FontStyle.italic,
+                              color: Colors.black54),
+                        ))),
+              ],
+            ),
+
+            // Logs
+            Row(
+              children: [
                 Container(
                   // color: Colors.black,
                   height: MediaQuery.of(context).size.height / 2.5,
@@ -259,7 +313,7 @@ class _MyAppState extends State<MyApp> {
               children: [
                 Container(
                   margin: const EdgeInsets.fromLTRB(0, 10, 0, 0),
-                  height: MediaQuery.of(context).size.height / 4,
+                  height: MediaQuery.of(context).size.height / 5,
                   decoration: BoxDecoration(
                       border: Border.all(
                         color: const Color.fromARGB(255, 0, 0, 0),
@@ -280,7 +334,7 @@ class _MyAppState extends State<MyApp> {
                   ),
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),
