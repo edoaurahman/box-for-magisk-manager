@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:async';
 import 'package:box_for_magisk/src/decoder.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:root/root.dart';
 import './web_view.dart';
 import 'package:process_run/shell.dart';
@@ -41,7 +42,7 @@ class _MyAppState extends State<MyApp> {
             TextButton(
               child: const Text('Exit'),
               onPressed: () {
-                exit(0);
+                SystemNavigator.pop();
               },
             ),
           ],
