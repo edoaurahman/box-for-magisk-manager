@@ -40,6 +40,7 @@ class _ConvertState extends State<Convert> {
             '- name: ${getParams.length >= 5 ? getParams[4] : 'Simple-sub'}\n');
         accDecode.write('    server: ${getParams[1]}\n');
         accDecode.write('    port: ${getParams[2].replaceAll('/', '')}\n');
+        accDecode.write('    type: trojan\n');
         accDecode.write('    password: ${getParams[0]}\n');
         accDecode.write('    skip-cert-verify: true\n');
         if (octMap['sni'] != null) {
