@@ -220,6 +220,7 @@ class _MyAppState extends State<MyApp> {
           ),
         ],
       ),
+      resizeToAvoidBottomInset: false,
       body: Container(
         padding: const EdgeInsets.all(16.0),
         child: Column(
