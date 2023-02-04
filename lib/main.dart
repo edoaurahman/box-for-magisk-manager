@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:async';
 import 'package:box_for_magisk/src/decoder.dart';
 import 'package:flutter/gestures.dart';
