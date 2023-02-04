@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'dart:async';
 import 'package:box_for_magisk/src/decoder.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:root/root.dart';
+import 'package:url_launcher/url_launcher.dart';
 import './web_view.dart';
 import 'package:process_run/shell.dart';
 
@@ -23,8 +25,9 @@ class _MyAppState extends State<MyApp> {
   String? _result;
   bool _status = false;
   String _logs = "", _update = "";
+  final _handleTapGesture = TapGestureRecognizer();
 
-  Future<void> noRootAccess() async {
+  Future<void> noRootAccess() {
     return showDialog<void>(
       context: context,
       barrierDismissible: false, // user must tap button!
@@ -43,6 +46,52 @@ class _MyAppState extends State<MyApp> {
               child: const Text('Exit'),
               onPressed: () {
                 SystemNavigator.pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _launch(Uri url) async {
+    await canLaunchUrl(url)
+        ? await launchUrl(url)
+        : notificationBar('Could Not Launch App');
+  }
+
+  void notificationBar(String message) {
+    final snackBar = SnackBar(content: Text(message));
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  Future<void> aboutMenu() {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('About'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                const Text('2023 Sing Box Manager\n'),
+                RichText(
+                    text: TextSpan(
+                        text: '@edoaurahman',
+                        style: const TextStyle(color: Colors.blue),
+                        recognizer: _handleTapGesture
+                          ..onTap = () {
+                            _launch(Uri.parse('https://t.me/edoaurahman'));
+                          }))
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Ok'),
+              onPressed: () {
+                Navigator.pop(context);
               },
             ),
           ],
@@ -122,15 +171,29 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  void handleClick(int item) {
-    exit(0);
-  }
-
   @override
   void setState(fn) {
     if (mounted) {
       super.setState(fn);
     }
+  }
+
+  void handleClick(int item) {
+    switch (item) {
+      case 0:
+        aboutMenu();
+        break;
+      case 1:
+        SystemNavigator.pop();
+        break;
+      default:
+    }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _handleTapGesture.dispose();
   }
 
   @override
@@ -143,7 +206,8 @@ class _MyAppState extends State<MyApp> {
           PopupMenuButton<int>(
             onSelected: (item) => handleClick(item),
             itemBuilder: (context) => [
-              const PopupMenuItem<int>(value: 0, child: Text('Exit')),
+              const PopupMenuItem<int>(value: 0, child: Text('About')),
+              const PopupMenuItem<int>(value: 1, child: Text('Exit')),
             ],
           ),
         ],
