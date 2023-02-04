@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:box_for_magisk/src/decoder.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -45,6 +46,7 @@ class _MyAppState extends State<MyApp> {
               child: const Text('Exit'),
               onPressed: () {
                 SystemNavigator.pop();
+                exit(0);
               },
             ),
           ],
@@ -53,10 +55,13 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  Future<void> _launch(Uri url) async {
-    await canLaunchUrl(url)
-        ? await launchUrl(url)
-        : notificationBar('Could Not Launch App');
+  Future<void> _launchInBrowser(Uri url) async {
+    if (!await launchUrl(
+      url,
+      mode: LaunchMode.externalApplication,
+    )) {
+      notificationBar('Could not launch');
+    }
   }
 
   void notificationBar(String message) {
@@ -81,7 +86,8 @@ class _MyAppState extends State<MyApp> {
                         style: const TextStyle(color: Colors.blue),
                         recognizer: _handleTapGesture
                           ..onTap = () {
-                            _launch(Uri.parse('https://t.me/edoaurahman'));
+                            _launchInBrowser(
+                                Uri.parse('https://t.me/edoaurahman'));
                           }))
               ],
             ),
@@ -104,6 +110,9 @@ class _MyAppState extends State<MyApp> {
     setState(() {
       _status = result!;
     });
+    if (!_status) {
+      noRootAccess();
+    }
   }
 
   //Execute shell Commands

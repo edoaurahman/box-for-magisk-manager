@@ -1,3 +1,4 @@
+import 'package:box_for_magisk/src/navigation_controls.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -51,7 +52,10 @@ class _WebViewState extends State<WebView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(pageName)),
+      appBar: AppBar(
+        title: Text(pageName),
+        actions: [NavigationControls(controller: controller)],
+      ),
       body: Stack(
         children: [
           WebViewWidget(
