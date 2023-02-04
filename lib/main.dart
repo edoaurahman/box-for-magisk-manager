@@ -221,18 +221,13 @@ class _MyAppState extends State<MyApp> {
         ],
       ),
       resizeToAvoidBottomInset: false,
-      body: Container(
+      body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Text('Root Access : $_status'),
-              ],
-            ),
-            Row(children: [
-              Text('Status Service : $_runningStatus'),
-            ]),
+            Text('Root Access : $_status'),
+            Text('Status Service : $_runningStatus'),
 
             //Button
             Row(
@@ -355,59 +350,44 @@ class _MyAppState extends State<MyApp> {
                         ))),
               ],
             ),
-
             // Logs
-            Row(
-              children: [
-                Container(
-                  // color: Colors.black,
-                  height: MediaQuery.of(context).size.height / 2.5,
-                  decoration: BoxDecoration(
-                      border: Border.all(
-                        color: const Color.fromARGB(255, 0, 0, 0),
-                      ),
-                      borderRadius: const BorderRadius.all(Radius.circular(20)),
-                      color: const Color.fromARGB(255, 32, 32, 32)),
-                  width: MediaQuery.of(context).size.width - 32,
-                  child: Center(
-                    child:
-                        ListView(padding: const EdgeInsets.all(10), children: [
-                      const Text('Clash Log',
-                          style: TextStyle(color: Colors.redAccent)),
-                      Text(
-                        _logs,
-                        style: const TextStyle(color: Colors.white),
-                      )
-                    ]),
+            Container(
+              height: MediaQuery.of(context).size.height / 2.5,
+              decoration: BoxDecoration(
+                  border: Border.all(
+                    color: const Color.fromARGB(255, 0, 0, 0),
                   ),
-                ),
-              ],
+                  borderRadius: const BorderRadius.all(Radius.circular(20)),
+                  color: const Color.fromARGB(255, 32, 32, 32)),
+              width: MediaQuery.of(context).size.width - 32,
+              child: ListView(padding: const EdgeInsets.all(10), children: [
+                const Text('Clash Log',
+                    style: TextStyle(color: Colors.redAccent)),
+                Text(
+                  _logs,
+                  style: const TextStyle(color: Colors.white),
+                )
+              ]),
             ),
-            Row(
-              children: [
-                Container(
-                  margin: const EdgeInsets.fromLTRB(0, 10, 0, 0),
-                  height: MediaQuery.of(context).size.height / 5,
-                  decoration: BoxDecoration(
-                      border: Border.all(
-                        color: const Color.fromARGB(255, 0, 0, 0),
-                      ),
-                      borderRadius: const BorderRadius.all(Radius.circular(20)),
-                      color: const Color.fromARGB(255, 32, 32, 32)),
-                  width: MediaQuery.of(context).size.width - 32,
-                  child: Center(
-                    child:
-                        ListView(padding: const EdgeInsets.all(10), children: [
-                      const Text('Update Log',
-                          style: TextStyle(color: Colors.redAccent)),
-                      Text(
-                        _update,
-                        style: const TextStyle(color: Colors.white),
-                      )
-                    ]),
+
+            Container(
+              margin: const EdgeInsets.fromLTRB(0, 10, 0, 0),
+              height: MediaQuery.of(context).size.height / 5,
+              decoration: BoxDecoration(
+                  border: Border.all(
+                    color: const Color.fromARGB(255, 0, 0, 0),
                   ),
-                ),
-              ],
+                  borderRadius: const BorderRadius.all(Radius.circular(20)),
+                  color: const Color.fromARGB(255, 32, 32, 32)),
+              width: MediaQuery.of(context).size.width - 32,
+              child: ListView(padding: const EdgeInsets.all(10), children: [
+                const Text('Update Log',
+                    style: TextStyle(color: Colors.redAccent)),
+                Text(
+                  _update,
+                  style: const TextStyle(color: Colors.white),
+                )
+              ]),
             ),
           ],
         ),

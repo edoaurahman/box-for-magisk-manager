@@ -20,6 +20,7 @@ class _ConvertState extends State<Convert> {
   }
 
   void trojanDecode(String input) {
+    input = urlDecode(input);
     List<String> getParams = input.split(RegExp('[@:?#]'));
     try {
       var filter = getParams[3];
@@ -44,21 +45,21 @@ class _ConvertState extends State<Convert> {
       }
       accDecode.write('    network: ${octMap['type']}\n');
       if (octMap['type'] != null && octMap['type'] == "ws") {
-        accDecode.write('    ws-opts: ');
-        accDecode.write('      path: ${octMap['path']}');
-        accDecode.write('      headers: ');
+        accDecode.write('    ws-opts: \n');
+        accDecode.write('      path: ${octMap['path']}\n');
+        accDecode.write('      headers: \n');
         if (octMap['host'] != null) {
-          accDecode.write('        Host: ${octMap['host']}');
+          accDecode.write('        Host: ${octMap['host']}\n');
         } else {
-          accDecode.write('        Host: ${getParams[1]}');
+          accDecode.write('        Host: ${getParams[1]}\n');
         }
       } else if (octMap['type'] != null && octMap['type'] == 'grpc') {
-        accDecode.write('    grpc-opts: ');
+        accDecode.write('    grpc-opts: \n');
         if (octMap['serviceName'].toString().contains('#')) {
           accDecode.write(
-              '      grpc-service-name: ${octMap['serviceName'].split('#')[0]}');
+              '      grpc-service-name: ${octMap['serviceName'].split('#')[0]}\n');
         } else {
-          accDecode.write('      grpc-service-name: ${octMap['serviceName']}');
+          accDecode.write('      grpc-service-name: ${octMap['serviceName']}\n');
         }
       }
       accDecode.write('    udp: true');
@@ -71,7 +72,7 @@ class _ConvertState extends State<Convert> {
   }
 
   Future<void> vmessDecode(String input) async {
-    var decodeMap = urlDecode(input);
+    var decodeMap = urlBase64Decode(input);
     try {
       var accDecode = StringBuffer();
       accDecode.write('- name: ${decodeMap!['ps']}\n');
@@ -119,7 +120,7 @@ class _ConvertState extends State<Convert> {
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
-  Map? urlDecode(String uri) {
+  Map? urlBase64Decode(String uri) {
     try {
       var encodedString = uri;
       var decodedString = base64.decode(encodedString);
@@ -129,6 +130,10 @@ class _ConvertState extends State<Convert> {
       notificationBar('Error, please check again');
       return null;
     }
+  }
+
+  String urlDecode(String input) {
+    return Uri.decodeFull(input);
   }
 
   Future<void> checkTypeConfig() async {
@@ -151,37 +156,30 @@ class _ConvertState extends State<Convert> {
     return Scaffold(
         appBar: AppBar(title: const Text('Converter')),
         resizeToAvoidBottomInset: false,
-        body: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-              child: TextFormField(
-                controller: rawText,
-                minLines: null,
-                maxLines: null,
-                decoration: InputDecoration(
-                    focusedBorder: OutlineInputBorder(
-                        borderSide: const BorderSide(
-                            width: 3, color: Colors.blueAccent),
-                        borderRadius: BorderRadius.circular(20.0)),
-                    enabledBorder: OutlineInputBorder(
-                        borderSide: const BorderSide(
-                            width: 3, color: Colors.blueAccent),
-                        borderRadius: BorderRadius.circular(20.0))),
-              ),
-            ),
-            Row(children: const [
-              Padding(
-                padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
-                child: Text(
+        body: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                TextFormField(
+                  controller: rawText,
+                  minLines: null,
+                  maxLines: null,
+                  decoration: InputDecoration(
+                      focusedBorder: OutlineInputBorder(
+                          borderSide: const BorderSide(
+                              width: 3, color: Colors.blueAccent),
+                          borderRadius: BorderRadius.circular(20.0)),
+                      enabledBorder: OutlineInputBorder(
+                          borderSide: const BorderSide(
+                              width: 3, color: Colors.blueAccent),
+                          borderRadius: BorderRadius.circular(20.0))),
+                ),
+                const Text(
                   'For now just support trojan and vmess',
                   style: TextStyle(color: Colors.redAccent),
                 ),
-              ),
-            ]),
-            Container(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
+
+                Row(
                   children: [
                     SizedBox(
                       width: width / 2 - 32,
@@ -203,27 +201,23 @@ class _ConvertState extends State<Convert> {
                           label: const Text('Copy')),
                     ),
                   ],
-                )),
-            //
-            Center(
-              child: Container(
-                margin: const EdgeInsets.fromLTRB(0, 10, 0, 0),
-                height: MediaQuery.of(context).size.height / 3,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.blueAccent, width: 3),
-                  borderRadius: const BorderRadius.all(Radius.circular(20)),
                 ),
-                width: MediaQuery.of(context).size.width - 32,
-                child: Center(
+                //
+                Container(
+                  margin: const EdgeInsets.fromLTRB(0, 10, 0, 0),
+                  height: MediaQuery.of(context).size.height / 3,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.blueAccent, width: 3),
+                    borderRadius: const BorderRadius.all(Radius.circular(20)),
+                  ),
+                  width: MediaQuery.of(context).size.width - 32,
                   child: ListView(padding: const EdgeInsets.all(10), children: [
                     Text(
                       decodeText,
                     )
                   ]),
                 ),
-              ),
-            ),
-          ],
-        ));
+              ],
+            )));
   }
 }
