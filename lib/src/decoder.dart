@@ -26,8 +26,8 @@ class _ConvertState extends State<Convert> {
       var filter = getParams[3];
       var keyValuePairs = filter.split('&');
       Map octMap = <String, String>{};
-      for (var i = 0; i < keyValuePairs.length; i++) {
-        List pair = keyValuePairs[i].split('=');
+      for (var i in keyValuePairs) {
+        List pair = i.split('=');
         octMap[pair[0]] = pair[1];
       }
       var accDecode = StringBuffer();
