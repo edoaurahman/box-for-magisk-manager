@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'package:box_for_magisk/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -11,6 +11,7 @@ class Convert extends StatefulWidget {
 }
 
 class _ConvertState extends State<Convert> {
+  final MyApp callback = const MyApp();
   final rawText = TextEditingController();
   String decodeText = "";
   @override
@@ -139,6 +140,7 @@ class _ConvertState extends State<Convert> {
   Future<void> checkTypeConfig() async {
     String input = rawText.text;
     String type = input.split(':')[0];
+    if(input.isEmpty) notificationBar('Empty');
     if (type == 'trojan') {
       input = input.replaceAll('trojan://', '');
       trojanDecode(input);
@@ -175,7 +177,7 @@ class _ConvertState extends State<Convert> {
                           borderRadius: BorderRadius.circular(20.0))),
                 ),
                 const Text(
-                  'For now just support trojan and vmess',
+                  'Clash Only (For now just support trojan and vmess)',
                   style: TextStyle(color: Colors.redAccent),
                 ),
 
@@ -202,7 +204,9 @@ class _ConvertState extends State<Convert> {
                     ),
                   ],
                 ),
-                //
+                ElevatedButton(onPressed: () {
+                  callback.getLaunchInBrowser('https://t.me/subxfm_bot');
+                }, child: const Text('Telegram Bot(Sing-box/xray)')),
                 Container(
                   margin: const EdgeInsets.fromLTRB(0, 10, 0, 0),
                   height: MediaQuery.of(context).size.height / 3,

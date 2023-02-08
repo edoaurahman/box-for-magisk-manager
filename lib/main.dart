@@ -1,19 +1,23 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:box_for_magisk/src/custom_transition_widget.dart';
 import 'package:box_for_magisk/src/decoder.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:root/root.dart';
 import 'package:url_launcher/url_launcher.dart';
-import './web_view.dart';
 import 'package:process_run/shell.dart';
 
 void main() =>
-    runApp(const MaterialApp(debugShowCheckedModeBanner: false, home: MyApp()));
+    runApp(const MaterialApp(debugShowCheckedModeBanner: true, home: MyApp()));
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  void getLaunchInBrowser(input) {
+    _MyAppState()._launchInBrowser(input);
+  }
 
   @override
   State<StatefulWidget> createState() => _MyAppState();
@@ -22,10 +26,10 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   bool _runningStatus = false;
   String _btnStart = 'START';
-  String? _result;
-  bool _status = false;
-  String _logs = "", _update = "";
-  final _handleTapGesture = TapGestureRecognizer();
+  String? _selectedMode;
+  late String _logs = "", _update = "";
+  ButtonStyle _btnStartStyle =
+      ElevatedButton.styleFrom(backgroundColor: Colors.blue);
 
   Future<void> noRootAccess() {
     return showDialog<void>(
@@ -55,21 +59,23 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  Future<void> _launchInBrowser(Uri url) async {
+  Future<void> _launchInBrowser(String input) async {
+    Uri url = Uri.parse(input);
     if (!await launchUrl(
       url,
       mode: LaunchMode.externalApplication,
     )) {
-      notificationBar('Could not launch');
+      _notificationBar('Could not launch');
     }
   }
 
-  void notificationBar(String message) {
+  void _notificationBar(String message) {
     final snackBar = SnackBar(content: Text(message));
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   Future<void> aboutMenu() {
+    late final handleTapGesture = TapGestureRecognizer();
     return showDialog<void>(
       context: context,
       barrierDismissible: false, // user must tap button!
@@ -84,10 +90,9 @@ class _MyAppState extends State<MyApp> {
                     text: TextSpan(
                         text: '@edoaurahman',
                         style: const TextStyle(color: Colors.blue),
-                        recognizer: _handleTapGesture
+                        recognizer: handleTapGesture
                           ..onTap = () {
-                            _launchInBrowser(
-                                Uri.parse('https://t.me/edoaurahman'));
+                            _launchInBrowser('https://t.me/edoaurahman');
                           }))
               ],
             ),
@@ -96,6 +101,7 @@ class _MyAppState extends State<MyApp> {
             TextButton(
               child: const Text('Ok'),
               onPressed: () {
+                handleTapGesture.dispose();
                 Navigator.pop(context);
               },
             ),
@@ -105,12 +111,83 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
+  Future<void> changeMode(String script) async {
+    await Root.exec(cmd: script);
+    _notificationBar('Mode has been changed, please restart the service');
+  }
+
+  Future<void> settingMenu() {
+    return showDialog<void>(
+        context: context,
+        barrierDismissible: false, // user must tap button!
+        builder: (context) {
+          return StatefulBuilder(builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Setting'),
+              content: SingleChildScrollView(
+                child: ListBody(
+                  children: <Widget>[
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Text('Mode : '),
+                            DropdownButton<String>(
+                              value: _selectedMode,
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedMode = value!;
+                                });
+                                changeMode(value!);
+                              },
+                              items: const [
+                                DropdownMenuItem(
+                                  value:
+                                      "sed -i 's/bin_name=\$.*/bin_name=\$c/' /data/adb/box/settings.ini",
+                                  child: Text('Clash'),
+                                ),
+                                DropdownMenuItem(
+                                  value:
+                                      "sed -i 's/bin_name=\$.*/bin_name=\$s/' /data/adb/box/settings.ini",
+                                  child: Text('Sing Box'),
+                                ),
+                                DropdownMenuItem(
+                                  value:
+                                      "sed -i 's/bin_name=\$.*/bin_name=\$x/' /data/adb/box/settings.ini",
+                                  child: Text('Xray'),
+                                ),
+                                DropdownMenuItem(
+                                  value:
+                                      "sed -i 's/bin_name=\$.*/bin_name=\$v/' /data/adb/box/settings.ini",
+                                  child: Text('V2fly'),
+                                ),
+                              ],
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Ok'),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            );
+          });
+        });
+  }
+
   Future<void> checkRoot() async {
     bool? result = await Root.isRooted();
-    setState(() {
-      _status = result!;
-    });
-    if (!_status) {
+    if (!result!) {
       noRootAccess();
     }
   }
@@ -126,20 +203,19 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> isRunning() async {
-    String? res;
-    res = await Root.exec(cmd: "ls /data/adb/modules/box_for_magisk");
-    setState(() {
-      _result = res!;
-    });
-    if (_result!.contains('disable')) {
+    String? result =
+        await Root.exec(cmd: "ls /data/adb/modules/box_for_magisk");
+    if (result!.contains('disable')) {
       setState(() {
         _runningStatus = false;
         _btnStart = 'START';
+        _btnStartStyle = ElevatedButton.styleFrom(backgroundColor: Colors.blue);
       });
     } else {
       setState(() {
         _runningStatus = true;
         _btnStart = 'STOP';
+        _btnStartStyle = ElevatedButton.styleFrom(backgroundColor: Colors.red);
       });
     }
   }
@@ -152,29 +228,64 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
-  Future<void> updateClash() async {
-    var controller = ShellLinesController();
-    var shell = Shell(stdout: controller.sink, verbose: false);
+  Future<void> updateBox() async {
+    ShellLinesController controller = ShellLinesController();
+    Shell shell = Shell(stdout: controller.sink, verbose: false);
     controller.stream.listen((event) {
       setState(() {
         _update = event;
       });
-      shell.kill();
     });
     try {
       await shell.run('su -c ./data/adb/box/scripts/box.tool upcore');
+      await shell.run('su -c ./data/adb/box/scripts/box.tool upyacd');
+      await shell.run('su -c ./data/adb/box/scripts/box.tool subgeo');
       setState(() {
-        _update = "Core Updated";
+        _update = "Updated";
       });
-    } on ShellException catch (_) {}
+      shell.kill();
+      controller.close();
+    } on ShellException catch (e) {
+      _notificationBar(e.toString());
+    }
+  }
+
+  Future<void> getMode() async {
+    String mode = " ";
+    mode = await Root.exec(
+            cmd: 'cat /data/adb/box/settings.ini | grep "bin_name="') ??
+        "";
+    mode = mode.split('\$')[1];
+    if (mode.contains('c')) {
+      setState(() {
+        _selectedMode =
+            "sed -i 's/bin_name=\$.*/bin_name=\$c/' /data/adb/box/settings.ini";
+      });
+    } else if (mode.contains('s')) {
+      setState(() {
+        _selectedMode =
+            "sed -i 's/bin_name=\$.*/bin_name=\$s/' /data/adb/box/settings.ini";
+      });
+    } else if (mode.contains('x')) {
+      setState(() {
+        _selectedMode =
+            "sed -i 's/bin_name=\$.*/bin_name=\$x/' /data/adb/box/settings.ini";
+      });
+    } else if (mode.contains('v')) {
+      setState(() {
+        _selectedMode =
+            "sed -i 's/bin_name=\$.*/bin_name=\$v/' /data/adb/box/settings.ini";
+      });
+    }
   }
 
   @override
   void initState() {
     super.initState();
+    getMode();
     checkRoot();
     isRunning();
-    Timer.periodic(const Duration(seconds: 1), (timer) {
+    Timer.periodic(const Duration(seconds: 1), (e) {
       logs();
     });
   }
@@ -189,9 +300,12 @@ class _MyAppState extends State<MyApp> {
   void handleClick(int item) {
     switch (item) {
       case 0:
-        aboutMenu();
+        settingMenu();
         break;
       case 1:
+        aboutMenu();
+        break;
+      case 2:
         SystemNavigator.pop();
         break;
       default:
@@ -199,14 +313,8 @@ class _MyAppState extends State<MyApp> {
   }
 
   @override
-  void dispose() {
-    super.dispose();
-    _handleTapGesture.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    var width = MediaQuery.of(context).size.width;
+    double width = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Box For Magisk'),
@@ -214,49 +322,40 @@ class _MyAppState extends State<MyApp> {
           PopupMenuButton<int>(
             onSelected: (item) => handleClick(item),
             itemBuilder: (context) => [
-              const PopupMenuItem<int>(value: 0, child: Text('About')),
-              const PopupMenuItem<int>(value: 1, child: Text('Exit')),
+              const PopupMenuItem<int>(value: 0, child: Text('Setting')),
+              const PopupMenuItem<int>(value: 1, child: Text('About')),
+              const PopupMenuItem<int>(value: 2, child: Text('Exit')),
             ],
           ),
         ],
       ),
       resizeToAvoidBottomInset: false,
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Root Access : $_status'),
-            Text('Status Service : $_runningStatus'),
-
-            //Button
             Row(
               children: [
                 SizedBox(
                     width: width / 2 - 32,
-                    child: OutlinedButton.icon(
+                    child: ElevatedButton.icon(
+                      style: _btnStartStyle,
                       onPressed: startService,
                       icon: const Icon(Icons.play_arrow,
-                          size: 25, color: Colors.black),
-                      label: Text(
-                        _btnStart,
-                        style: const TextStyle(
-                            fontSize: 20,
-                            fontStyle: FontStyle.italic,
-                            color: Colors.black54),
-                      ),
+                          size: 25, color: Colors.white),
+                      label: Text(_btnStart,
+                          style: const TextStyle(
+                              fontSize: 20,
+                              fontStyle: FontStyle.italic,
+                              color: Colors.white)),
                     )),
                 const Spacer(),
                 SizedBox(
                     width: width / 2 - 32,
                     child: OutlinedButton.icon(
                         onPressed: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const WebView(
-                                      'http://127.0.0.1:9090/ui',
-                                      'DASHBOARD')));
+                          _launchInBrowser('http://127.0.0.1:9090/ui');
                         },
                         icon: const Icon(Icons.desktop_mac_outlined,
                             size: 20, color: Colors.black),
@@ -275,11 +374,7 @@ class _MyAppState extends State<MyApp> {
                     width: width / 2 - 32,
                     child: OutlinedButton.icon(
                         onPressed: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const WebView(
-                                      'https://speedtest.net', 'SPEEDTEST')));
+                          _launchInBrowser('https://speedtest.net');
                         },
                         icon: const Icon(Icons.speed_outlined,
                             size: 20, color: Colors.black),
@@ -294,9 +389,7 @@ class _MyAppState extends State<MyApp> {
                 SizedBox(
                     width: width / 2 - 32,
                     child: OutlinedButton.icon(
-                        onPressed: () {
-                          updateClash();
-                        },
+                        onPressed: () => updateBox(),
                         icon: const Icon(Icons.update_outlined,
                             size: 20, color: Colors.black),
                         label: const Text(
@@ -313,13 +406,7 @@ class _MyAppState extends State<MyApp> {
                 SizedBox(
                     width: width / 2 - 32,
                     child: OutlinedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const WebView(
-                                      'https://howdy.id', 'CREATE ACCOUNT')));
-                        },
+                        onPressed: () => _launchInBrowser('https://howdy.id'),
                         icon: const Icon(Icons.person_add_alt,
                             size: 20, color: Colors.black),
                         label: const Text(
@@ -334,10 +421,11 @@ class _MyAppState extends State<MyApp> {
                     width: width / 2 - 32,
                     child: OutlinedButton.icon(
                         onPressed: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const Convert()));
+                          // Navigator.push(
+                          //     context,
+                          //     MaterialPageRoute(
+                          //         builder: (context) => const Convert()));
+                          Navigator.of(context).push(CustomRouteTransition(widget: const Convert()));
                         },
                         icon: const Icon(Icons.change_circle_outlined,
                             size: 20, color: Colors.black),
@@ -372,7 +460,7 @@ class _MyAppState extends State<MyApp> {
 
             Container(
               margin: const EdgeInsets.fromLTRB(0, 10, 0, 0),
-              height: MediaQuery.of(context).size.height / 5,
+              height: 70,
               decoration: BoxDecoration(
                   border: Border.all(
                     color: const Color.fromARGB(255, 0, 0, 0),
