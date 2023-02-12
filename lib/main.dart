@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:box_for_magisk/src/custom_transition_widget.dart';
 import 'package:box_for_magisk/src/decoder.dart';
 import 'package:flutter/gestures.dart';
@@ -49,8 +48,7 @@ class _MyAppState extends State<MyApp> {
             TextButton(
               child: const Text('Exit'),
               onPressed: () {
-                SystemNavigator.pop();
-                exit(0);
+                SystemChannels.platform.invokeMethod('SystemNavigator.pop');
               },
             ),
           ],
@@ -314,7 +312,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    double width = MediaQuery.of(context).size.width;
+    double? width = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Box For Magisk'),
@@ -330,154 +328,176 @@ class _MyAppState extends State<MyApp> {
         ],
       ),
       resizeToAvoidBottomInset: false,
-      body: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                SizedBox(
-                    width: width / 2 - 32,
-                    child: ElevatedButton.icon(
-                      style: _btnStartStyle,
-                      onPressed: startService,
-                      icon: const Icon(Icons.play_arrow,
-                          size: 25, color: Colors.white),
-                      label: Text(_btnStart,
-                          style: const TextStyle(
-                              fontSize: 20,
-                              fontStyle: FontStyle.italic,
-                              color: Colors.white)),
-                    )),
-                const Spacer(),
-                SizedBox(
-                    width: width / 2 - 32,
-                    child: OutlinedButton.icon(
-                        onPressed: () {
-                          _launchInBrowser('http://127.0.0.1:9090/ui');
-                        },
-                        icon: const Icon(Icons.desktop_mac_outlined,
-                            size: 20, color: Colors.black),
-                        label: const Text(
-                          'DASHBOARD',
-                          style: TextStyle(
-                              fontSize: 20,
-                              fontStyle: FontStyle.italic,
-                              color: Colors.black54),
-                        ))),
-              ],
-            ),
-            Row(
-              children: [
-                SizedBox(
-                    width: width / 2 - 32,
-                    child: OutlinedButton.icon(
-                        onPressed: () {
-                          _launchInBrowser('https://speedtest.net');
-                        },
-                        icon: const Icon(Icons.speed_outlined,
-                            size: 20, color: Colors.black),
-                        label: const Text(
-                          'SPEEDTEST',
-                          style: TextStyle(
-                              fontSize: 20,
-                              fontStyle: FontStyle.italic,
-                              color: Colors.black54),
-                        ))),
-                const Spacer(),
-                SizedBox(
-                    width: width / 2 - 32,
-                    child: OutlinedButton.icon(
-                        onPressed: () => updateBox(),
-                        icon: const Icon(Icons.update_outlined,
-                            size: 20, color: Colors.black),
-                        label: const Text(
-                          'UPDATE',
-                          style: TextStyle(
-                              fontSize: 20,
-                              fontStyle: FontStyle.italic,
-                              color: Colors.black54),
-                        ))),
-              ],
-            ),
-            Row(
-              children: [
-                SizedBox(
-                    width: width / 2 - 32,
-                    child: OutlinedButton.icon(
-                        onPressed: () => _launchInBrowser('https://howdy.id'),
-                        icon: const Icon(Icons.person_add_alt,
-                            size: 20, color: Colors.black),
-                        label: const Text(
-                          'CREATE ACCOUNT',
-                          style: TextStyle(
-                              fontSize: 20,
-                              fontStyle: FontStyle.italic,
-                              color: Colors.black54),
-                        ))),
-                const Spacer(),
-                SizedBox(
-                    width: width / 2 - 32,
-                    child: OutlinedButton.icon(
-                        onPressed: () {
-                          // Navigator.push(
-                          //     context,
-                          //     MaterialPageRoute(
-                          //         builder: (context) => const Convert()));
-                          Navigator.of(context).push(CustomRouteTransition(widget: const Convert()));
-                        },
-                        icon: const Icon(Icons.change_circle_outlined,
-                            size: 20, color: Colors.black),
-                        label: const Text(
-                          'CONVERTER',
-                          style: TextStyle(
-                              fontSize: 20,
-                              fontStyle: FontStyle.italic,
-                              color: Colors.black54),
-                        ))),
-              ],
-            ),
-            // Logs
-            Container(
-              height: MediaQuery.of(context).size.height / 2.5,
-              decoration: BoxDecoration(
-                  border: Border.all(
-                    color: const Color.fromARGB(255, 0, 0, 0),
-                  ),
-                  borderRadius: const BorderRadius.all(Radius.circular(20)),
-                  color: const Color.fromARGB(255, 32, 32, 32)),
-              width: MediaQuery.of(context).size.width - 32,
-              child: ListView(padding: const EdgeInsets.all(10), children: [
-                const Text('Clash Log',
-                    style: TextStyle(color: Colors.redAccent)),
-                Text(
-                  _logs,
-                  style: const TextStyle(color: Colors.white),
-                )
-              ]),
-            ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Card(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15.0),
+                ),
+                color: Colors.teal[300],
+                elevation: 5,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    ListTile(
+                      leading: const Icon(Icons.dashboard, size: 50),
+                      title: const Text('STATUS',
+                          style: TextStyle(color: Colors.white)),
+                      subtitle: Text(_runningStatus ? 'RUNNING' : 'STOPPED',
+                          style: const TextStyle(color: Colors.white)),
+                    ),
+                  ],
+                ),
+              ),
+              Row(
+                children: [
+                  SizedBox(
+                      width: width / 2 - 32,
+                      child: ElevatedButton.icon(
+                        style: _btnStartStyle,
+                        onPressed: startService,
+                        icon: const Icon(Icons.play_arrow,
+                            size: 25, color: Colors.white),
+                        label: Text(_btnStart,
+                            style: const TextStyle(
+                                fontSize: 20,
+                                fontStyle: FontStyle.italic,
+                                color: Colors.white)),
+                      )),
+                  const Spacer(),
+                  SizedBox(
+                      width: width / 2 - 32,
+                      child: OutlinedButton.icon(
+                          onPressed: () {
+                            _launchInBrowser('http://127.0.0.1:9090/ui');
+                          },
+                          icon: const Icon(Icons.desktop_mac_outlined,
+                              size: 20, color: Colors.black),
+                          label: const Text(
+                            'DASHBOARD',
+                            style: TextStyle(
+                                fontSize: 20,
+                                fontStyle: FontStyle.italic,
+                                color: Colors.black54),
+                          ))),
+                ],
+              ),
+              Row(
+                children: [
+                  SizedBox(
+                      width: width / 2 - 32,
+                      child: OutlinedButton.icon(
+                          onPressed: () {
+                            _launchInBrowser('https://speedtest.net');
+                          },
+                          icon: const Icon(Icons.speed_outlined,
+                              size: 20, color: Colors.black),
+                          label: const Text(
+                            'SPEEDTEST',
+                            style: TextStyle(
+                                fontSize: 20,
+                                fontStyle: FontStyle.italic,
+                                color: Colors.black54),
+                          ))),
+                  const Spacer(),
+                  SizedBox(
+                      width: width / 2 - 32,
+                      child: OutlinedButton.icon(
+                          onPressed: () => updateBox(),
+                          icon: const Icon(Icons.update_outlined,
+                              size: 20, color: Colors.black),
+                          label: const Text(
+                            'UPDATE',
+                            style: TextStyle(
+                                fontSize: 20,
+                                fontStyle: FontStyle.italic,
+                                color: Colors.black54),
+                          ))),
+                ],
+              ),
+              Row(
+                children: [
+                  SizedBox(
+                      width: width / 2 - 32,
+                      child: OutlinedButton.icon(
+                          onPressed: () => _launchInBrowser('https://howdy.id'),
+                          icon: const Icon(Icons.person_add_alt,
+                              size: 20, color: Colors.black),
+                          label: Text(
+                            'CREATE ACCOUNT',
+                            style: TextStyle(
+                                fontSize: width * 0.03 > 20 ? 20 : width * 0.03,
+                                fontStyle: FontStyle.italic,
+                                color: Colors.black54),
+                          ))),
+                  const Spacer(),
+                  SizedBox(
+                      width: width / 2 - 32,
+                      child: OutlinedButton.icon(
+                          onPressed: () {
+                            // Navigator.push(
+                            //     context,
+                            //     MaterialPageRoute(
+                            //         builder: (context) => const Convert()));
+                            Navigator.of(context).push(
+                                CustomRouteTransition(widget: const Convert()));
+                          },
+                          icon: const Icon(Icons.change_circle_outlined,
+                              size: 20, color: Colors.black),
+                          label: const Text(
+                            'CONVERTER',
+                            style: TextStyle(
+                                fontSize: 20,
+                                fontStyle: FontStyle.italic,
+                                color: Colors.black54),
+                          ))),
+                ],
+              ),
+              // Logs
+              Container(
+                height: MediaQuery.of(context).size.height / 2.5,
+                decoration: BoxDecoration(
+                    border: Border.all(
+                      color: const Color.fromARGB(255, 0, 0, 0),
+                    ),
+                    borderRadius: const BorderRadius.all(Radius.circular(20)),
+                    color: const Color.fromARGB(255, 32, 32, 32)),
+                width: MediaQuery.of(context).size.width - 32,
+                child: ListView(padding: const EdgeInsets.all(10), children: [
+                  const Text('Clash Log',
+                      style: TextStyle(color: Colors.redAccent)),
+                  Text(
+                    _logs,
+                    style: const TextStyle(color: Colors.white),
+                  )
+                ]),
+              ),
 
-            Container(
-              margin: const EdgeInsets.fromLTRB(0, 10, 0, 0),
-              height: 70,
-              decoration: BoxDecoration(
-                  border: Border.all(
-                    color: const Color.fromARGB(255, 0, 0, 0),
-                  ),
-                  borderRadius: const BorderRadius.all(Radius.circular(20)),
-                  color: const Color.fromARGB(255, 32, 32, 32)),
-              width: MediaQuery.of(context).size.width - 32,
-              child: ListView(padding: const EdgeInsets.all(10), children: [
-                const Text('Update Log',
-                    style: TextStyle(color: Colors.redAccent)),
-                Text(
-                  _update,
-                  style: const TextStyle(color: Colors.white),
-                )
-              ]),
-            ),
-          ],
+              Container(
+                margin: const EdgeInsets.fromLTRB(0, 10, 0, 0),
+                height: 70,
+                decoration: BoxDecoration(
+                    border: Border.all(
+                      color: const Color.fromARGB(255, 0, 0, 0),
+                    ),
+                    borderRadius: const BorderRadius.all(Radius.circular(20)),
+                    color: const Color.fromARGB(255, 32, 32, 32)),
+                width: MediaQuery.of(context).size.width - 32,
+                child: ListView(padding: const EdgeInsets.all(10), children: [
+                  const Text('Update Log',
+                      style: TextStyle(color: Colors.redAccent)),
+                  Text(
+                    _update,
+                    style: const TextStyle(color: Colors.white),
+                  )
+                ]),
+              ),
+            ],
+          ),
         ),
       ),
     );
