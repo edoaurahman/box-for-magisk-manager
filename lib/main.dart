@@ -30,17 +30,17 @@ class _MyAppState extends State<MyApp> {
   ButtonStyle _btnStartStyle =
       ElevatedButton.styleFrom(backgroundColor: Colors.blue);
 
-  Future<void> noRootAccess() {
+  Future<void> alertDialogMsg(String msg) {
     return showDialog<void>(
       context: context,
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('No Root Access'),
+          title: const Text('Alert !!!'),
           content: SingleChildScrollView(
             child: ListBody(
-              children: const <Widget>[
-                Text('Please grant root access'),
+              children: <Widget>[
+                Text(msg),
               ],
             ),
           ),
@@ -186,7 +186,7 @@ class _MyAppState extends State<MyApp> {
   Future<void> checkRoot() async {
     bool? result = await Root.isRooted();
     if (!result!) {
-      noRootAccess();
+      alertDialogMsg("No Root Access");
     }
   }
 
@@ -198,6 +198,14 @@ class _MyAppState extends State<MyApp> {
       await Root.exec(cmd: "touch /data/adb/modules/box_for_magisk/disable");
     }
     isRunning();
+  }
+
+  Future<void> isInstalled() async {
+    String? result = await Root.exec(cmd: "ls /data/adb/box");
+    print(result);
+    if(result == ""){
+      alertDialogMsg("Box for magisk Module not installed");
+    }
   }
 
   Future<void> isRunning() async {
@@ -280,8 +288,9 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    getMode();
     checkRoot();
+    isInstalled();
+    getMode();
     isRunning();
     Timer.periodic(const Duration(seconds: 1), (e) {
       logs();
