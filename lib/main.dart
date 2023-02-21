@@ -26,7 +26,8 @@ class _MyAppState extends State<MyApp> {
   bool _runningStatus = false;
   String _btnStart = 'START';
   String? _selectedMode;
-  late String _logs = "", _update = "";
+  late String _update = "";
+  late List<String> _logs;
   ButtonStyle _btnStartStyle =
       ElevatedButton.styleFrom(backgroundColor: Colors.blue);
 
@@ -202,8 +203,7 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> isInstalled() async {
     String? result = await Root.exec(cmd: "ls /data/adb/box");
-    print(result);
-    if(result == ""){
+    if (result == "") {
       alertDialogMsg("Box for magisk Module not installed");
     }
   }
@@ -230,7 +230,7 @@ class _MyAppState extends State<MyApp> {
     String? log;
     log = await Root.exec(cmd: "cat /data/adb/box/run/runs.log");
     setState(() {
-      _logs = log!;
+      _logs = log!.split('\n');
     });
   }
 
@@ -476,14 +476,42 @@ class _MyAppState extends State<MyApp> {
                     borderRadius: const BorderRadius.all(Radius.circular(20)),
                     color: const Color.fromARGB(255, 32, 32, 32)),
                 width: MediaQuery.of(context).size.width - 32,
-                child: ListView(padding: const EdgeInsets.all(10), children: [
-                  const Text('Clash Log',
-                      style: TextStyle(color: Colors.redAccent)),
-                  Text(
-                    _logs,
-                    style: const TextStyle(color: Colors.white),
+                // child: ListView(padding: const EdgeInsets.all(10), children: [
+                //   const Text('Clash Log',
+                //       style: TextStyle(color: Colors.redAccent)),
+                //   Text(
+                //     // _logs,
+                //     'test',
+                //     style: const TextStyle(color: Colors.white),
+                //   )
+                // ]),
+                  child:
+                  ListView.builder(
+                    itemCount: _logs.length,
+                    itemBuilder: (context, index) {
+                      Color textColor = Colors.black;
+
+                      if (RegExp('\\[warn\\]').hasMatch(_logs[index])) {
+                        textColor = Colors.yellow;
+                      } else if (RegExp('\\[info\\]').hasMatch(_logs[index])) {
+                        textColor = Colors.blue;
+                      }else if (RegExp('\\[debug\\]').hasMatch(_logs[index])) {
+                        textColor = Colors.white;
+                      }else{
+                        textColor = Colors.white;
+                      }
+
+                      return ListTile(
+                        dense: true,
+                        contentPadding: const EdgeInsets.only(left: 0.0, right: 0.0),
+                        visualDensity: const VisualDensity(horizontal: 0,vertical: -4),
+                        title: Text(
+                          _logs[index],
+                          style: TextStyle(color: textColor,fontSize: 14),
+                        ),
+                      );
+                    },
                   )
-                ]),
               ),
 
               Container(
