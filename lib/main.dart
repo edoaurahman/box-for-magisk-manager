@@ -27,6 +27,7 @@ class _MyAppState extends State<MyApp> {
   String _btnStart = 'START';
   String? _selectedMode;
   late String _update = "";
+  MaterialColor _statusColor = Colors.red;
   late List<String> _logs;
   ButtonStyle _btnStartStyle =
       ElevatedButton.styleFrom(backgroundColor: Colors.blue);
@@ -216,13 +217,23 @@ class _MyAppState extends State<MyApp> {
         _runningStatus = false;
         _btnStart = 'START';
         _btnStartStyle = ElevatedButton.styleFrom(backgroundColor: Colors.blue);
+        _statusColor = Colors.red;
       });
+      await Root.exec(cmd: 'su -c > /data/adb/box/run/runs.log');
     } else {
       setState(() {
-        _runningStatus = true;
         _btnStart = 'STOP';
         _btnStartStyle = ElevatedButton.styleFrom(backgroundColor: Colors.red);
       });
+    }
+    await Future.delayed(const Duration(seconds: 10));
+    for (String arr in _logs) {
+      if (arr.contains('clash connected.')) {
+        setState(() {
+          _statusColor = Colors.teal;
+          _runningStatus = true;
+        });
+      }
     }
   }
 
@@ -347,7 +358,7 @@ class _MyAppState extends State<MyApp> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15.0),
                 ),
-                color: Colors.teal[300],
+                color: _statusColor,
                 elevation: 5,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -468,25 +479,15 @@ class _MyAppState extends State<MyApp> {
               ),
               // Logs
               Container(
-                height: MediaQuery.of(context).size.height / 2.5,
-                decoration: BoxDecoration(
-                    border: Border.all(
-                      color: const Color.fromARGB(255, 0, 0, 0),
-                    ),
-                    borderRadius: const BorderRadius.all(Radius.circular(20)),
-                    color: const Color.fromARGB(255, 32, 32, 32)),
-                width: MediaQuery.of(context).size.width - 32,
-                // child: ListView(padding: const EdgeInsets.all(10), children: [
-                //   const Text('Clash Log',
-                //       style: TextStyle(color: Colors.redAccent)),
-                //   Text(
-                //     // _logs,
-                //     'test',
-                //     style: const TextStyle(color: Colors.white),
-                //   )
-                // ]),
-                  child:
-                  ListView.builder(
+                  height: MediaQuery.of(context).size.height / 2.5,
+                  decoration: BoxDecoration(
+                      border: Border.all(
+                        color: const Color.fromARGB(255, 0, 0, 0),
+                      ),
+                      borderRadius: const BorderRadius.all(Radius.circular(20)),
+                      color: const Color.fromARGB(255, 32, 32, 32)),
+                  width: MediaQuery.of(context).size.width - 32,
+                  child: ListView.builder(
                     itemCount: _logs.length,
                     itemBuilder: (context, index) {
                       Color textColor = Colors.black;
@@ -495,24 +496,27 @@ class _MyAppState extends State<MyApp> {
                         textColor = Colors.yellow;
                       } else if (RegExp('\\[info\\]').hasMatch(_logs[index])) {
                         textColor = Colors.blue;
-                      }else if (RegExp('\\[debug\\]').hasMatch(_logs[index])) {
+                      } else if (RegExp('\\[debug\\]').hasMatch(_logs[index])) {
                         textColor = Colors.white;
-                      }else{
+                      } else if (RegExp('\\[error\\]').hasMatch(_logs[index])) {
+                        textColor = Colors.red;
+                      } else {
                         textColor = Colors.white;
                       }
 
                       return ListTile(
                         dense: true,
-                        contentPadding: const EdgeInsets.only(left: 0.0, right: 0.0),
-                        visualDensity: const VisualDensity(horizontal: 0,vertical: -4),
+                        contentPadding:
+                            const EdgeInsets.only(left: 0.0, right: 0.0),
+                        visualDensity:
+                            const VisualDensity(horizontal: 0, vertical: -4),
                         title: Text(
                           _logs[index],
-                          style: TextStyle(color: textColor,fontSize: 14),
+                          style: TextStyle(color: textColor, fontSize: 14),
                         ),
                       );
                     },
-                  )
-              ),
+                  )),
 
               Container(
                 margin: const EdgeInsets.fromLTRB(0, 10, 0, 0),
